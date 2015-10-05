@@ -1,77 +1,84 @@
 # WebVR Boilerplate
 
-A starting point for web-based VR experiences that work well in both
-Google Cardboard and Oculus Rift. Also provides a good fallback for
+A [THREE.js][three]-based starting point for VR experiences that work well in
+both Google Cardboard and other VR headsets. Also provides a fallback for
 experiencing the same content without requiring a VR device.
 
-Uses the [webvr-polyfill project][polyfill] to provide VR support even
-if no VR device is available. This gives good fallbacks for Cardboard,
-mobile devices and desktop devices.
+This project relies heavily on the [webvr-polyfill][polyfill] to provide VR
+support even if the WebVR spec is not implemented.
 
+[three]: http://threejs.org/
 [polyfill]: https://github.com/borismus/webvr-polyfill
 
-# What's inside...
+# Projects that use the boilerplate
 
-[**THREE.js** `three.min.js`](http://threejs.org/)
+[![WebVR Boilerplate](content_images/boilerplate.png)][wb]
+[![Moving Music](content_images/moving-music.png)][mm]
+[![EmbedVR](content_images/photosphere.png)][evr]
+[![Sechelt](content_images/sechelt.png)][s]
 
-- WebGL helper library that greatly simplifies 3D graphics.
+[wb]: http://borismus.github.io/webvr-boilerplate/
+[mm]: http://borismus.github.io/moving-music/
+[evr]: #
+[s]: http://borismus.github.io/sechelt/
 
-[**VRControls** `VRControls.js`](https://github.com/mrdoob/three.js/blob/master/examples/js/controls/VRControls.js)
 
-- THREE.js controls which take advantage of the WebVR API.
-- Usually attached to the THREE.Camera to look around the scene.
+# Getting started
 
-[**VREffect** `VREffect.js`](https://github.com/mrdoob/three.js/blob/master/examples/js/effects/VREffect.js)
+The easiest way to start is to fork this repository or copy its contents into a
+new directory.
 
-- THREE.js effect which renders a scene with two cameras in it.
-- Puts the two images side-by-side.
-
-[**WebVR polyfill** `webvr-polyfill.js`](https://github.com/borismus/webvr-polyfill)
-
-- For Cardboard rendering.
-- On mobile, supports rotation via DeviceOrientation.
-- On desktop, supports looking with the mouse or with arrow keys.
-
-**WebVR manager** `webvr-manager.js` (lives in this repository)
-
-- Feature detects for WebVR (or the polyfill).
-- If WebVR is available, places an active WebVR button on the bottom.
-- Other means of getting into VR mode: double click anywhere, double tap
-  anywhere.
-- For desktop, if an HMD is connected, goes into split-screen rendering
-  mode. Otherwise, goes into immersive fullscreen mode (with pointer lock).
-- For mobile, goes into Cardboard side-by-side rendering mode.
-
-TODO: Provide a configuration UI for switching modes if we guessed
-wrong.
-
-# Instructions
+Alternatively, you can start from scratch. The key parts that the boilerplate
+provides are:
 
 1. Include webvr-polyfill.js in your project.
 2. Include webvr-manager.js and instantiate a WebVRManager object,
-   passing in your VREffect instance (from the THREE.js effect library)
-   as first argument.
+   passing in your VREffect instance as well as THREE.js' WebGLRenderer (from
+   the THREE.js effect library) as first argument.
 
 For example,
 
     var effect = new THREE.VREffect(renderer);
-    var mgr = new WebVRManager(effect);
+    var manager = new WebVRManager(renderer, effect);
 
-For more information, see index.html, which should be well commented and
-self-explanatory.
+The manager handles going in and out of VR mode. Instead of calling
+`renderer.render()` or `effect.render()`, you call `manager.render()`, which
+renders in monocular view by default, or side-by-side binocular view when in VR
+mode.
 
-# Related projects
+# Features and known issues
 
-- WebVR Polyfill: <https://github.com/borismus/webvr-polyfill>
-- A yeoman-based getting started template: <https://github.com/dmarcos/vrwebgl>
-- LEAP's VR quickstart: <https://github.com/leapmotion-examples/javascript/blob/master/v2/vr-quickstart/index.html>
-- A WebVR Polyfill that is unfortunately incomplete: <https://github.com/thomasfoster96/WebVR-polyfill>
-- A three.js + VR starting point: <https://github.com/MozVR/vr-web-examples/tree/master/threejs-vr-boilerplate>
+Features:
 
+- Enter and exit VR mode (in WebVR and WebVR polyfill compatible environments).
+- Immersive fullscreen, orientation locking and sleep prevention.
+- Distortion correction, enabled in iOS only. 
+- High quality head tracking with motion prediction thanks to the WebVR polyfill.
 
-# Useful resources
+Bugs and known issues:
 
-- Cardboard Java SDK: https://github.com/googlesamples/cardboard-java
-- Brandon's info on Chrome's WebVR implementation: http://blog.tojicode.com/2014/07/bringing-vr-to-chrome.html
-- Vlad's quick guide to the WebVR API: http://blog.bitops.com/blog/2014/06/26/first-steps-for-vr-on-the-web/
-- The WebVR IDL: https://github.com/vvuk/gecko-dev/blob/oculus/dom/webidl/VRDevice.webidl
+- Proper distortion correction for Android. This requires knowing physical
+  locations of lenses, which requires knowing device's DPI, which is hard in
+  general. It's easier in iOS because there are relatively few iPhone models.
+- Drift in Chrome for Android. Please star the bug and indicate that you really
+  care about high quality head tracking for VR: <http://crbug.com/397824>.
+- Wake lock for Android currently relies on a hack in which a hidden video is
+  played on repeat in the background. This causes big WebGL performance issues,
+  so has been disabled. This will be resolved when the official wakelock API
+  lands: <http://crbug.com/257511>
+
+# Thanks / credits!
+
+- [Dmitry Kovalev][dk] for implementing [lens distortion correction][distortion].
+- [Brandon Jones][bj] and [Vladimir Vukicevic][vv] for their work on the [WebVR
+  spec][spec]
+- [Diego Marcos][dm] for VREffect and VRControls.
+- [Ricardo Cabello][doob] for THREE.js.
+
+[dk]: https://plus.google.com/+DmitryKovalev1
+[distortion]: https://github.com/borismus/webvr-boilerplate/blob/master/src/cardboard-distorter.js
+[bj]: https://twitter.com/tojiro
+[vv]: https://twitter.com/vvuk
+[spec]: http://mozvr.github.io/webvr-spec/webvr.html
+[dm]: https://twitter.com/dmarcos
+[doob]: https://twitter.com/mrdoob
