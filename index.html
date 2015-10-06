@@ -122,8 +122,114 @@ body {
 </script>
 
 <script>
+
+function setupScene(scene, renderer) {
+  // LIGHTS
+
+  ambientLight = new THREE.AmbientLight( 0x444444 );
+  scene.add( ambientLight );
+
+  //
+
+  pointLight = new THREE.PointLight( 0xffffff, 1.5, 1000 );
+  pointLight.color.setHSL( 0.05, 1, 0.95 );
+  pointLight.position.set( 0, 0, 600 );
+
+  scene.add( pointLight );
+
+  // shadow for PointLight
+
+  spotLight = new THREE.SpotLight( 0xffffff, 1.5 );
+  spotLight.position.set( 0.05, 0.05, 1 );
+  spotLight.color.setHSL( 0.6, 1, 0.95 );
+  scene.add( spotLight );
+
+  spotLight.position.multiplyScalar( 700 );
+
+  spotLight.castShadow = true;
+  spotLight.onlyShadow = true;
+  // spotLight.shadowCameraVisible = true;
+
+  spotLight.shadowMapWidth = 2048;
+  spotLight.shadowMapHeight = 2048;
+
+  spotLight.shadowCameraNear = 200;
+  spotLight.shadowCameraFar = 1500;
+
+  spotLight.shadowCameraFov = 40;
+
+  spotLight.shadowBias = -0.005;
+  spotLight.shadowDarkness = 0.35;
+
+  //
+
+  directionalLight = new THREE.DirectionalLight( 0xffffff, 1.5 );
+  directionalLight.position.set( 1, -0.5, 1 );
+  directionalLight.color.setHSL( 0.6, 1, 0.95 );
+  scene.add( directionalLight );
+
+  directionalLight.position.multiplyScalar( 500 );
+
+  directionalLight.castShadow = true;
+  // directionalLight.shadowCameraVisible = true;
+
+  directionalLight.shadowMapWidth = 2048;
+  directionalLight.shadowMapHeight = 2048;
+
+  directionalLight.shadowCameraNear = 200;
+  directionalLight.shadowCameraFar = 1500;
+
+  directionalLight.shadowCameraLeft = -500;
+  directionalLight.shadowCameraRight = 500;
+  directionalLight.shadowCameraTop = 500;
+  directionalLight.shadowCameraBottom = -500;
+
+  directionalLight.shadowBias = -0.005;
+  directionalLight.shadowDarkness = 0.35;
+
+  //
+
+  directionalLight2 = new THREE.DirectionalLight( 0xffffff, 1.2 );
+  directionalLight2.position.set( 1, -0.5, -1 );
+  directionalLight2.color.setHSL( 0.08, 1, 0.825 );
+  scene.add( directionalLight2 );
+
+  var mapHeight = THREE.ImageUtils.loadTexture( "obj/leeperrysmith/Infinite-Level_02_Disp_NoSmoothUV-4096.jpg" );
+
+  mapHeight.anisotropy = 4;
+  mapHeight.repeat.set( 0.998, 0.998 );
+  mapHeight.offset.set( 0.001, 0.001 );
+  mapHeight.wrapS = mapHeight.wrapT = THREE.RepeatWrapping;
+  mapHeight.format = THREE.RGBFormat;
+
+  var material = new THREE.MeshPhongMaterial( { color: 0x552811, specular: 0x333333, shininess: 25, bumpMap: mapHeight, bumpScale: 19, metal: false } );
+
+  loader = new THREE.JSONLoader();
+  loader.load( "obj/leeperrysmith/LeePerrySmith.js", function( geometry ) { 
+    mesh = new THREE.Mesh( geometry, material );
+
+    mesh.position.y = - 50;
+    scale = 100;
+    mesh.scale.set( scale, scale, scale );
+
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+
+    scene.add( mesh );
+
+   } );
+
+  // 
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.cullFace = THREE.CullFaceBack;
+
+  //
+  renderer.gammaInput = true;
+  renderer.gammaOutput = true;
+}
+
 //Setup three.js WebGL renderer
-var renderer = new THREE.WebGLRenderer({ antialias: true });
+var renderer = new THREE.WebGLRenderer({ antialias: false });
 renderer.setPixelRatio(window.devicePixelRatio);
 
 // Append the canvas element created by the renderer to document body element.
@@ -145,57 +251,7 @@ effect.setSize(window.innerWidth, window.innerHeight);
 // Create a VR manager helper to enter and exit VR mode.
 var manager = new WebVRManager(renderer, effect, {hideButton: false});
 
-var video = document.createElement( 'video' );
-video.addEventListener( 'loadedmetadata', function ( event ) {
-
-  var texture = new THREE.VideoTexture( video );
-  texture.minFilter = THREE.NearestFilter;
-
-  var width = 640, height = 480;
-  var nearClipping = 850, farClipping = 4000;
-
-  geometry = new THREE.BufferGeometry();
-
-  var vertices = new Float32Array( width * height * 3 );
-
-  for ( var i = 0, j = 0, l = vertices.length; i < l; i += 3, j ++ ) {
-
-    vertices[ i ] = j % width;
-    vertices[ i + 1 ] = Math.floor( j / width );
-
-  }
-
-  geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-
-  material = new THREE.ShaderMaterial( {
-
-    uniforms: {
-
-      "map": { type: "t", value: texture },
-      "width": { type: "f", value: width },
-      "height": { type: "f", value: height },
-      "nearClipping": { type: "f", value: nearClipping },
-      "farClipping": { type: "f", value: farClipping },
-
-      "pointSize": { type: "f", value: 2 },
-      "zOffset": { type: "f", value: 1000 }
-
-    },
-    vertexShader: document.getElementById( 'vs' ).textContent,
-    fragmentShader: document.getElementById( 'fs' ).textContent,
-    blending: THREE.AdditiveBlending,
-    depthTest: false, depthWrite: false,
-    transparent: true
-
-  } );
-
-  mesh = new THREE.Points( geometry, material );
-  scene.add( mesh );
-},  false);
-
-video.loop = true;
-video.src = 'videos_src/kinect.webm';
-video.play();
+setupScene(scene, renderer);
 
 // Request animation frame loop function
 function animate(timestamp) {
